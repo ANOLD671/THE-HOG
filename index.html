@@ -1,11 +1,956 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>THE HOG - Telegram to Facebook Bot</title>
+    <meta charset="UTF-8">
+    <!-- UPDATED viewport for better fullscreen behavior -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <title>Live Sports Channels</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #ffffff;
+            min-height: 100vh;
+            transition: background 0.5s ease;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #ffffff;
+            margin-bottom: 30px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        button {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #ffffff;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin: 8px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+        
+        .welcome {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .channel-video-container {
+            margin: 25px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .channel-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .channel-video {
+            width: 100%;
+            height: 250px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #000;
+            position: relative;
+        }
+        
+        .video-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #111;
+            color: #fff;
+            font-size: 16px;
+        }
+        
+        .video-error {
+            background: #2d1a1a;
+            color: #ff6b6b;
+        }
+        
+        .close-btn {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+        }
+
+        .feature-list {
+            text-align: left;
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+        
+        .feature-list li {
+            margin-bottom: 8px;
+        }
+        
+        .channel-icon {
+            font-size: 24px;
+        }
+        
+        .section-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 25px 0 15px;
+            font-size: 20px;
+        }
+        
+        .section-title::before,
+        .section-title::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+            margin: 0 15px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4CAF50;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #2575fc;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 10px;
+        }
+        
+        .channel-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .channel-controls button {
+            flex: 1;
+            padding: 10px;
+            font-size: 14px;
+            min-width: 140px;
+        }
+        
+        .show-btn {
+            background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+        }
+        
+        .hide-btn {
+            background: linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%);
+        }
+
+        .android-laptop-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        /* Security Overlay */
+        .security-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #1a1a2e;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .security-message {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            max-width: 400px;
+        }
+        
+        .telegram-btn {
+            background: linear-gradient(135deg, #0088cc 0%, #00aced 100%);
+            margin-top: 20px;
+        }
+
+        .telegram-channel-btn {
+            background: linear-gradient(135deg, #0088cc 0%, #00aced 100%);
+            margin: 10px 0;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Hide from right-click */
+        .no-context {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* Device-specific styles */
+        .device-info {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        .telegram-links {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .telegram-links button {
+            flex: 1;
+            margin: 0;
+        }
+
+        .info-note {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .browser-warning {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid rgba(255, 193, 7, 0.5);
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+
+        /* Android Laptops info */
+        .android-laptops-info {
+            background: rgba(102, 126, 234, 0.2);
+            border: 1px solid rgba(102, 126, 234, 0.5);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            z-index: 1001;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast.success {
+            background: #4CAF50;
+        }
+        
+        .toast.error {
+            background: #f44336;
+        }
+        
+        .toast.info {
+            background: #2196F3;
+        }
+        
+        .toast.warning {
+            background: #FF9800;
+        }
+    </style>
 </head>
-<body>
-    <h1>THE HOG Bot</h1>
-    <p>Telegram to Facebook content sharing service</p>
-    <p>Contact: mwalearnold671@gmail.com</p>
+<body class="no-context" oncontextmenu="return false">
+    <!-- Security Overlay - Shows when not in Telegram -->
+    <div id="securityOverlay" class="security-overlay">
+        <div class="security-message">
+            <h2>🔒 Secure Access Required</h2>
+            <p>This application can only be accessed through Telegram for security reasons.</p>
+            <p>Please open this app within Telegram to continue.</p>
+            <div class="telegram-links">
+                <button class="telegram-channel-btn" onclick="openTelegramChannel()">
+                    📢 Our Channel
+                </button>
+                <button class="telegram-btn" onclick="openInTelegram()">
+                    🤖 Stream Bot
+                </button>
+            </div>
+            <p style="margin-top: 15px; font-size: 12px; opacity: 0.7;">
+                If you're already in Telegram, please wait...
+            </p>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <!-- Main App Content (Hidden by default) -->
+    <div id="appContent" class="hidden">
+        <div class="container">
+            <h1>⚽ Live Sports Channels</h1>
+            
+            <div class="welcome">
+                <h3>Hello! 👋</h3>
+                <p><span class="status-indicator"></span> All channels are live now</p>
+                <p class="device-info" id="deviceInfo">Detecting your device...</p>
+                <div class="telegram-links">
+                    <button class="telegram-channel-btn" onclick="openTelegramChannel()">
+                        📢 @livefootball671
+                    </button>
+                    <button class="telegram-btn" onclick="openStreamBot()">
+                        🤖 @streamer671_bot
+                    </button>
+                </div>
+                <div class="android-laptops-info">
+                    <strong>🚀 Android  Version</strong>
+                    <p style="margin: 5px 0; font-size: 14px;">For enhanced features and better performance</p>
+                    <button class="android-laptop-btn" id="androidLaptopBtn" onclick="openAndroidLaptops()" style="margin: 5px 0;">
+                        📱💻 Android 
+                    </button>
+                </div>
+            </div>
+
+            <!-- All Channels Section -->
+            <div class="section-title">Live Channels</div>
+            
+            <div id="allChannelsContainer">
+                <!-- All channels with videos will be loaded here -->
+            </div>
+
+            <!-- App Info Section -->
+            <div class="card">
+                <h3>Features</h3>
+                <ul class="feature-list">
+                    <li>Live sports streaming via iframe</li>
+                    <li>Multiple channels</li>
+                    <li>High quality video</li>
+                    <li>Android & Laptops version available</li>
+                    <li>Secure Telegram-only access</li>
+                    <li>Powered by @streamer671_bot</li>
+                </ul>
+            </div>
+
+            <!-- Android & Laptops Button Section -->
+            <div class="card">
+                <h3>🚀 Android & Laptops Version</h3>
+                <p>For the complete experience with enhanced features:</p>
+                <button class="android-laptop-btn" id="androidLaptopBtn2" onclick="openAndroidLaptops()">
+                    📱💻 Android 
+                </button>
+                <p style="margin-top: 10px; font-size: 12px; opacity: 0.7;">
+                    Optimized for Android devices and laptops
+                </p>
+            </div>
+            
+            <button onclick="showAlert()">ℹ️ App Info</button>
+            <button onclick="changeBackground()">🎨 Change Theme</button>
+            <button class="close-btn" onclick="closeApp()">❌ Close App</button>
+            
+            <div class="card">
+                <h3>About This App</h3>
+                <p>Enjoy live sports channels directly in your Telegram app! For enhanced features, use the "Android " button.</p>
+                <p style="margin-top: 10px; font-size: 14px; opacity: 0.8;">
+                    <strong>Powered by:</strong> @streamer671_bot<br>
+                    <strong>Updates:</strong> @livefootball671
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ================= SECURITY LAYERS =================
+        
+        function isTelegramWebApp() {
+            if (window.Telegram && window.Telegram.WebApp) {
+                return true;
+            }
+            const userAgent = navigator.userAgent.toLowerCase();
+            if (userAgent.includes('telegram') || userAgent.includes('webview')) {
+                return true;
+            }
+            if (window.location.search.includes('tgWebApp') || 
+                window.location.hash.includes('tgWebApp')) {
+                return true;
+            }
+            return false;
+        }
+
+        function isWebView() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            return userAgent.includes('wv') || 
+                   (userAgent.includes('android') && userAgent.includes('; wv')) ||
+                   userAgent.includes('mobile') && userAgent.includes('safari') && !userAgent.includes('chrome');
+        }
+
+        function isRegularBrowser() {
+            return !isTelegramWebApp() && !isWebView();
+        }
+
+        function setupAntiInspection() {
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                showToast('Right-click is disabled for security reasons.', 'warning');
+                return false;
+            });
+            
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'F12' || 
+                    (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
+                    (e.ctrlKey && e.key === 'u')) {
+                    e.preventDefault();
+                    showToast('Developer tools are disabled for security.', 'warning');
+                    return false;
+                }
+            });
+            
+            let devToolsOpen = false;
+            const threshold = 160;
+            const checkDevTools = () => {
+                const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+                const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+                if ((widthThreshold || heightThreshold) && !devToolsOpen) {
+                    devToolsOpen = true;
+                    showToast('Developer tools detected. Please refresh the page.', 'error');
+                }
+            };
+            setInterval(checkDevTools, 1000);
+        }
+
+        function getChannelsData() {
+            const channels = [
+                { 
+                    name: "PREMIER SPORTS", 
+                    icon: "⚽", 
+                    type: "sports",
+                    url: "https://river-1.rutube.ru/stream/genetta-311.m9.rutube.ru/UufgkIG1zLYI6BXOh8WxMg/1768137172/9585fdae92af45f113fdcc9f6c4ba442/720p_stream.m3u8" 
+                },
+                { 
+                    name: "PREMIER SPORTS", 
+                    icon: "⚽", 
+                    type: "sports",
+                    url: "https://hesgoal.cam/stream/sandbox.html?id=https://lovecdn.ru/daddy.php?stream=TNT1UK" 
+                }, { 
+                    name: "PREMIER SPORTS", 
+                    icon: "⚽", 
+                    type: "sports",
+                    url: "https://storage.googleapis.com/pouovertrong4/mux_video_ts1/index-1.m3u8" 
+                },
+                 { 
+                    name: "SKY SPORTS PREMIER LEAGUE", 
+                    icon: "🔴", 
+                    type: "premier_league",
+                    url: "https://river-5-557.rtbcdn.ru/stream/genetta-314.m9.rutube.ru/SFxCjiG_0G35eOTYpqWaKQ/1768137253/e5bacac3b8e730791d4cab20ae81cd8f/1080p_stream.m3u8" 
+                },
+                { 
+                    name: "SKY SPORTS MAIN", 
+                    icon: "📺", 
+                    type: "sports",
+                    url: "https://river-3-345.rtbcdn.ru/stream/genetta-311.m9.rutube.ru/cewTEBHyv05WjWKJrts79A/1767647085/9585fdae92af45f113fdcc9f6c4ba442/720p_stream.m3u8" 
+                },
+                
+                 { 
+                    name: "LALIGA", 
+                    icon: "⚽", 
+                    type: "sports",
+                    url: "https://hesgoal.cam/stream/sandbox.html?id=https://lovecdn.ru/daddy.php?stream=SkySportsFootballUK" 
+                },
+                { 
+                    name: "SKY SPORTS TENNIS", 
+                    icon: "🎾", 
+                    type: "tennis",
+                    url: "https://river-4-422.rtbcdn.ru/stream/genetta-511.ost.rutube.ru/8fqaxvI7r0jYL3EK4IkMlA/1768137386/5f5dc9d64b43dfc740e92f2bdf2b0d38/1080p_stream.m3u8" 
+                },
+                { 
+                    name: "SKY SPORTS F1", 
+                    icon: "🏎️", 
+                    type: "f1",
+                    url: "https://river-5-512.rtbcdn.ru/stream/genetta-517.ost.rutube.ru/n3tq0EjzlE-xbMM-6nvW7Q/1767208925/e5df6984021365a58b3ba22dab2f670a/1080p_stream.m3u8" 
+                },
+                 { 
+                    name: "NBA", 
+                    icon: "🏀", 
+                    type: "f1",
+                    url: "https://hesgoal.cam/stream/sandbox.html?id=https://lovecdn.ru/daddy.php?stream=SkySportsFootballUK" 
+                },
+                 { 
+                    name: "NBC SPORTS", 
+                    icon: "🔘", 
+                    type: "football",
+                    url: "https://embedhd.org/source/streamed.php?hd=114&id=18700&no=1" 
+                },
+                 { 
+                    name: "MATCH TV", 
+                    icon: "⚽", 
+                    type: "🔘",
+                    url: "https://river-3-344.rtbcdn.ru/stream/genetta-320.m9.rutube.ru/kTuhJ_tkFhHiB5Hd77lZxg/1768137312/11bbbec75a2ceb8cf446ad16813c6eec/720p_stream.m3u8" 
+                }
+            ];
+            return channels;
+        }
+
+        function openTelegramChannel() {
+            const channelUrl = 'https://t.me/livefootball671';
+            window.open(channelUrl, '_blank');
+            showToast('📢 Opening @livefootball671 channel...', 'info');
+        }
+
+        function openStreamBot() {
+            const botUrl = 'https://t.me/streamer671_bot';
+            window.open(botUrl, '_blank');
+            showToast('🤖 Opening @streamer671_bot...', 'info');
+        }
+
+        function openInTelegram() {
+            openStreamBot();
+        }
+
+        function openAndroidLaptops() {
+            if (isWebView()) {
+                showToast('🔄 Redirecting to Mini App...', 'info');
+                alert('In a real implementation, this would open the Mini App in Telegram');
+                return;
+            }
+            const part1 = "aHR0cHM6Ly";
+            const part2 = "9hbm9sZDY3";
+            const part3 = "MS5naXRodWI";
+            const part4 = "uaW8vdGVsZS";
+            const part5 = "1hcHAv";
+            const encodedUrl = part1 + part2 + part3 + part4 + part5;
+            const actualUrl = atob(encodedUrl);
+            const newWindow = window.open(actualUrl, '_blank');
+            if (newWindow) {
+                showToast('🚀 Opening Android  version...', 'success');
+                try {
+                    newWindow.blur();
+                    window.focus();
+                } catch (e) {}
+            } else {
+                showAndroidInstructions();
+            }
+        }
+
+        function showAndroidInstructions() {
+            alert(`🚀 Android  Version
+
+For the complete streaming experience with enhanced features:
+
+1. The Android  version will open automatically
+2. If it doesn't open, please allow pop-ups
+3. For best experience, use on Android devices or laptops
+
+Features:
+• Enhanced streaming features
+• Better video performance
+• Optimized for mobile and desktop
+
+📢 Updates: @livefootball671
+🤖 Source: @streamer671_bot
+
+Enjoy uninterrupted streaming!`);
+        }
+
+        // ================= MAIN APP LOGIC =================
+        
+        let tg = null;
+        let channelsList = [];
+        const allChannelsContainer = document.getElementById("allChannelsContainer");
+        const securityOverlay = document.getElementById("securityOverlay");
+        const appContent = document.getElementById("appContent");
+        const deviceInfo = document.getElementById("deviceInfo");
+        const androidLaptopBtn = document.getElementById("androidLaptopBtn");
+        const androidLaptopBtn2 = document.getElementById("androidLaptopBtn2");
+
+        function detectDevice() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            let deviceType = 'Unknown Device';
+            if (userAgent.includes('android')) {
+                deviceType = '📱 Android Device';
+            } else if (userAgent.includes('iphone') || userAgent.includes('ipad')) {
+                deviceType = '📱 iOS Device';
+            } else if (userAgent.includes('windows') || userAgent.includes('macintosh') || userAgent.includes('linux')) {
+                deviceType = '💻 Laptop/Desktop';
+            }
+            deviceInfo.textContent = deviceType;
+            return deviceType;
+        }
+
+        function showToast(message, type = 'info', duration = 3000) {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            toastContainer.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }, duration);
+        }
+
+        // NEW: disable swipe-down close and request fullscreen for the Mini App
+        function setupTelegramViewportFeatures() {
+            if (!tg) return;
+            try {
+                // Disable vertical swipe minimizing/closing (Bot API 7.7+) [web:25][web:11]
+                if (tg.isFeatureSupported && tg.isFeatureSupported('web_app_setup_swipe_behavior')) {
+                    tg.setSwipeBehavior && tg.setSwipeBehavior({ allow_vertical_swipe: false });
+                }
+
+                // Request fullscreen Mini App if supported [web:20][web:16]
+                if (tg.isFeatureSupported && tg.isFeatureSupported('web_app_request_fullscreen')) {
+                    tg.requestFullscreen && tg.requestFullscreen();
+                } else if (tg.expand) {
+                    tg.expand();
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function initializeApp() {
+            setupAntiInspection();
+            detectDevice();
+            
+            if (isTelegramWebApp()) {
+                tg = window.Telegram.WebApp;
+                
+                // Existing expand is now handled inside setupTelegramViewportFeatures as fallback
+                securityOverlay.style.display = 'none';
+                appContent.classList.remove('hidden');
+                
+                channelsList = getChannelsData();
+                loadAllChannels();
+                
+                if (tg && tg.ready) {
+                    tg.ready();
+                }
+
+                // NEW: configure swipe behavior + fullscreen for Mini App
+                setupTelegramViewportFeatures();
+
+                showToast('App loaded successfully!', 'success');
+            } else if (isWebView()) {
+                const referrer = document.referrer;
+                const urlParams = new URLSearchParams(window.location.search);
+                const secretKey = urlParams.get('key');
+                
+                if (secretKey === 'secure123') {
+                    securityOverlay.style.display = 'none';
+                    appContent.classList.remove('hidden');
+                    
+                    androidLaptopBtn.textContent = '📱 Open Mini App';
+                    androidLaptopBtn2.textContent = '📱 Open Mini App';
+                    
+                    channelsList = getChannelsData();
+                    loadAllChannels();
+                    
+                    showToast('App loaded successfully!', 'success');
+                } else {
+                    securityOverlay.style.display = 'flex';
+                    appContent.classList.add('hidden');
+                    setTimeout(() => {
+                        openStreamBot();
+                    }, 5000);
+                }
+            } else {
+                securityOverlay.style.display = 'flex';
+                appContent.classList.add('hidden');
+                setTimeout(() => {
+                    openStreamBot();
+                }, 5000);
+            }
+        }
+
+        const videoStates = [];
+
+        function loadAllChannels() {
+            allChannelsContainer.innerHTML = "";
+            videoStates.length = 0;
+            
+            channelsList.forEach((channel, index) => {
+                videoStates.push({ isVisible: false });
+                
+                const channelContainer = document.createElement("div");
+                channelContainer.className = "channel-video-container";
+                channelContainer.id = `channel-${index}`;
+                
+                channelContainer.innerHTML = `
+                    <div class="channel-title">
+                        <span class="channel-icon">${channel.icon}</span>
+                        ${channel.name}
+                    </div>
+                    <div class="channel-video" id="video-container-${index}">
+                        <div class="video-placeholder" id="placeholder-${index}">
+                            <div class="loading-spinner"></div>
+                            <div>Loading ${channel.name} stream...</div>
+                            <div style="font-size: 12px; margin-top: 5px; opacity: 0.7;">Powered by @streamer671_bot</div>
+                        </div>
+                        <iframe
+                            id="video-${index}"
+                            width="100%"
+                            height="100%"
+                            src="${channel.url}"
+                            style="border: none;"
+                            allow="clipboard-write; autoplay; fullscreen"
+                            allowfullscreen
+                            webkitAllowFullScreen
+                            mozallowfullscreen
+                            class="hidden"
+                            onload="handleVideoLoad(${index})"
+                            onerror="handleVideoError(${index})"
+                        ></iframe>
+                    </div>
+                    <div class="channel-controls">
+                        <button class="show-btn" onclick="showVideo(${index})" id="show-btn-${index}">
+                            <span>▶️</span> Show Video
+                        </button>
+                        <button class="hide-btn hidden" onclick="hideVideo(${index})" id="hide-btn-${index}">
+                            <span>⏸️</span> Hide Video
+                        </button>
+                        <button class="android-laptop-btn" onclick="openAndroidLaptops()">
+                            <span>${isWebView() ? '📱' : '📱💻'}</span> ${isWebView() ? 'Open Mini App' : 'Android & Laptops'}
+                        </button>
+                        <button onclick="reloadVideo(${index})">
+                            <span>🔄</span> Reload Stream
+                        </button>
+                    </div>
+                `;
+                
+                allChannelsContainer.appendChild(channelContainer);
+            });
+        }
+
+        function showVideo(index) {
+            const video = document.getElementById(`video-${index}`);
+            const placeholder = document.getElementById(`placeholder-${index}`);
+            const showBtn = document.getElementById(`show-btn-${index}`);
+            const hideBtn = document.getElementById(`hide-btn-${index}`);
+            
+            if (video && placeholder) {
+                video.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+                videoStates[index].isVisible = true;
+                
+                showBtn.classList.add('hidden');
+                hideBtn.classList.remove('hidden');
+            }
+        }
+
+        function hideVideo(index) {
+            const video = document.getElementById(`video-${index}`);
+            const placeholder = document.getElementById(`placeholder-${index}`);
+            const showBtn = document.getElementById(`show-btn-${index}`);
+            const hideBtn = document.getElementById(`hide-btn-${index}`);
+            
+            if (video && placeholder) {
+                video.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+                videoStates[index].isVisible = false;
+                
+                showBtn.classList.remove('hidden');
+                hideBtn.classList.add('hidden');
+            }
+        }
+
+        function handleVideoLoad(index) {
+            const placeholder = document.getElementById(`placeholder-${index}`);
+            const video = document.getElementById(`video-${index}`);
+            
+            if (placeholder) {
+                placeholder.classList.add('hidden');
+            }
+            if (video) {
+                video.classList.remove('hidden');
+                videoStates[index].isVisible = true;
+                
+                const showBtn = document.getElementById(`show-btn-${index}`);
+                const hideBtn = document.getElementById(`hide-btn-${index}`);
+                if (showBtn && hideBtn) {
+                    showBtn.classList.add('hidden');
+                    hideBtn.classList.remove('hidden');
+                }
+            }
+            
+            showToast(`${channelsList[index].name} loaded successfully!`, 'success');
+        }
+
+        function handleVideoError(index) {
+            const placeholder = document.getElementById(`placeholder-${index}`);
+            
+            if (placeholder) {
+                placeholder.innerHTML = `
+                    <div>❌ Stream Error - ${channelsList[index].name}</div>
+                    <div style="font-size: 14px; margin-top: 10px;">Failed to load stream</div>
+                    <div style="font-size: 12px; margin-top: 5px; opacity: 0.7;">Powered by @streamer671_bot</div>
+                    <button onclick="openAndroidLaptops()" style="margin-top: 10px; padding: 8px 12px; background: #667eea; border: none; border-radius: 5px; color: white; cursor: pointer;">
+                        Try ${isWebView() ? 'Mini App' : 'Android & Laptops Version'}
+                    </button>
+                `;
+                placeholder.classList.add('video-error');
+            }
+            
+            showToast(`Failed to load ${channelsList[index].name}`, 'error');
+        }
+
+        function reloadVideo(index) {
+            const video = document.getElementById(`video-${index}`);
+            const placeholder = document.getElementById(`placeholder-${index}`);
+            const showBtn = document.getElementById(`show-btn-${index}`);
+            const hideBtn = document.getElementById(`hide-btn-${index}`);
+            
+            if (video && placeholder) {
+                placeholder.innerHTML = `
+                    <div class="loading-spinner"></div>
+                    <div>Reloading ${channelsList[index].name} stream...</div>
+                    <div style="font-size: 12px; margin-top: 5px; opacity: 0.7;">Powered by @streamer671_bot</div>
+                `;
+                placeholder.classList.remove('video-error');
+                placeholder.classList.remove('hidden');
+                video.classList.add('hidden');
+                
+                showBtn.classList.remove('hidden');
+                hideBtn.classList.add('hidden');
+                videoStates[index].isVisible = false;
+                
+                const currentSrc = video.src;
+                video.src = '';
+                setTimeout(() => {
+                    video.src = currentSrc;
+                }, 100);
+                
+                showToast(`Reloading ${channelsList[index].name}...`, 'info');
+            }
+        }
+
+        function showAlert() {
+            alert(`Welcome to Live Sports Channels!
+
+🔒 SECURITY FEATURES:
+• Telegram-only access
+• Anti-inspection protection  
+• Source code obfuscation
+• Enhanced security overlay
+
+🎯 TWO VERSIONS AVAILABLE:
+• Mini App: Quick preview in Telegram
+• Android & Laptops: Complete experience with enhanced features
+
+🚀 ANDROID FEATURES:
+• Enhanced streaming features
+• Better video performance
+                        • Optimized for mobile and desktop
+
+📢 OUR CHANNEL: @livefootball671
+🤖 STREAM SOURCE: @streamer671_bot
+
+💡 Use "Android & Laptops" button for the best experience!`);
+        }
+        
+        function changeBackground() {
+            const colors = ['#1a1a2e', '#16213e', '#0f3460', '#533483', '#2d4059', '#1b262c'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            document.body.style.backgroundColor = randomColor;
+            showToast('Theme changed!', 'info');
+        }
+        
+        function closeApp() {
+            if (tg && tg.close) {
+                tg.close();
+            } else {
+                alert('App would close now. In a real Telegram Web App, this would close the application.');
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
 </body>
 </html>
